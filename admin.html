@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PANEL | TALHA</title>
+    <link rel="icon" href="logo.png" type="image/png" />
+
+    <style>
+        :root { 
+            --accent:#22c55e; --blue:#2563eb; --red:#ef4444; 
+            --bg:#020617; --card:#0f172a; --text:#ffffff; --border:#1e293b; --input-bg:#020617;
+        }
+        body.light-mode { 
+            --bg:#f1f5f9; --card:#ffffff; --text:#000000; --border:#cbd5e1; --input-bg:#f8fafc;
+        }
+        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; display:flex; justify-content:center; padding:20px; transition:0.3s;}
+        
+        .box { background:var(--card); padding:30px; border-radius:30px; width:450px; border:1px solid var(--border); box-shadow:0 20px 40px rgba(0,0,0,0.2); position:relative;}
+        
+        .header-section { position:relative; text-align:center; margin-bottom:25px; padding-top:10px;}
+        .logo-img { width:100px; height:100px; border-radius:50%; animation:zoomInOut 4s infinite; border:3px solid var(--blue);}
+        @keyframes zoomInOut {0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+        
+        .theme-toggle { position:absolute; top:0; right:0; cursor:pointer; width:30px; height:30px; transition: 0.3s; z-index: 15;}
+        
+        /* Input & Error Styling */
+        .input-group { margin: 8px 0; position: relative; }
+        input { width:100%; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--input-bg); color:var(--accent); font-weight: bold; outline: none; box-sizing: border-box; transition: 0.3s;}
+        input::placeholder { color: #555; font-weight: normal; }
+        
+        /* Error State */
+        input.error-border { border-color: var(--red) !important; }
+        .error-msg { color: var(--red); font-size: 12px; margin-top: 4px; display: none; font-weight: 500; }
+
+        .btn { display: flex; align-items: center; justify-content: center; gap: 10px; background:var(--blue); color:white; border:none; width:100%; padding:15px; border-radius:12px; cursor:pointer; font-weight:bold; margin-top:12px;}
+
+        .logout-btn { position:absolute; top:15px; left:15px; background:var(--red); color:white; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:bold; display: flex; align-items: center; gap: 5px; z-index: 10;}
+        
+        .search-container { position: relative; margin-top:20px;}
+        .search-container input { padding-left: 45px; border-color: var(--blue); }
+        .search-main-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; }
+
+        .user-card { background:rgba(120,120,120,0.1); padding:15px; border-radius:15px; margin-top:12px; display:flex; justify-content:space-between; align-items:center; border-left:5px solid var(--blue);}
+        .del-btn { background:var(--red); border:none; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:bold; display: flex; align-items: center; gap: 5px;}
+
+        #toast { 
+            visibility:hidden; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); 
+            background:var(--blue); color:white; padding:12px 25px; border-radius:50px; 
+            font-weight:bold; z-index:100; display: flex; align-items: center; gap: 10px;
+        }
+        #toast.show { visibility:visible; animation: pop 0.3s ease; }
+        @keyframes pop { from {bottom: 0; opacity:0;} to {bottom: 30px; opacity:1;} }
+        
+        .hidden { display:none !important; }
+    </style>
+</head>
+<body>
+
+<div id="toast">
+    <span id="toastText">Done!</span>
+    <img src="remove.png" id="toastIcon" style="display:none; width:20px;">
+</div>
+
+<div id="loginBox" class="box hidden">
+    <div class="header-section">
+        <img src="sun.png" id="themeIconLogin" class="theme-toggle" onclick="toggleTheme()">
+        <img src="logo.png" class="logo-img">
+    </div>
+    <h2 style="text-align:center; margin:0; margin-bottom: 10px;">Admin Login</h2>
+    
+    <div class="input-group">
+        <input type="password" id="pass" placeholder="Enter Password" oninput="resetError()">
+        <div id="loginError" class="error-msg">Please enter a password!</div>
+    </div>
+
+    <button class="btn" onclick="login()">
+        <img src="login.png" style="width:20px;"> Login
+    </button>
+</div>
+
+<div id="panelBox" class="box hidden">
+    <button class="logout-btn" onclick="logout()">
+        <img src="logout.png" style="width:14px;"> LOGOUT
+    </button>
+    
+    <div class="header-section">
+        <img src="sun.png" id="themeIconPanel" class="theme-toggle" onclick="toggleTheme()">
+        <img src="logo.png" class="logo-img">
+        <h3 style="margin:10px 0 0; color:var(--blue); text-transform: uppercase;">TALHA ADMIN PANEL</h3>
+    </div>
+
+    <input type="text" id="n" placeholder="User Name">
+    <input type="text" id="i" placeholder="20-Digit Device ID">
+    <button class="btn" onclick="add()">
+        <img src="upgrade.png" style="width:20px;"> UPGRADE
+    </button>
+
+    <div class="search-container">
+        <img src="search.png" id="searchIcon" class="search-main-icon">
+        <input type="text" id="s" placeholder="Search Users..." onkeyup="search()">
+    </div>
+    
+    <div id="list" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey:"AIzaSyA-0HnHv6SF49HCrfFuURn8t442s_p59Ls",
+    authDomain:"talha-admin-panel.firebaseapp.com",
+    projectId:"talha-admin-panel",
+    databaseURL:"https://talha-admin-panel-default-rtdb.firebaseio.com/"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+function applyTheme(theme) {
+    const themeIcon = (theme === 'light') ? 'moon.png' : 'sun.png';
+    const searchIcon = (theme === 'light') ? 'search1.png' : 'search.png';
+
+    if(theme === 'light') {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+
+    document.getElementById('themeIconLogin').src = themeIcon;
+    document.getElementById('themeIconPanel').src = themeIcon;
+
+    // 🔥 Search icon change according to theme
+    document.getElementById('searchIcon').src = searchIcon;
+}
+
+function toggleTheme() {
+    let current = localStorage.getItem('theme') || 'dark';
+    let newTheme = (current === 'dark') ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+}
+
+function showToast(m, showIcon = false){
+    let t = document.getElementById('toast');
+    document.getElementById('toastText').innerText = m;
+    document.getElementById('toastIcon').style.display = showIcon ? "block" : "none";
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Login Logic with Red Border & Text Error
+function login(){
+    let email="jafarabbask0@gmail.com"; 
+    let passInput = document.getElementById('pass');
+    let errorMsg = document.getElementById('loginError');
+    let passValue = passInput.value;
+
+    if(!passValue) {
+        passInput.classList.add('error-border');
+        errorMsg.style.display = "block";
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, passValue).catch(() => {
+        showToast("Wrong Password");
+    });
+}
+
+function resetError() {
+    let passInput = document.getElementById('pass');
+    let errorMsg = document.getElementById('loginError');
+    passInput.classList.remove('error-border');
+    errorMsg.style.display = "none";
+}
+
+function logout(){
+    auth.signOut().then(() => showToast("Logged Out"));
+}
+
+auth.onAuthStateChanged(user=>{
+    if(user){
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('panelBox').classList.remove('hidden');
+        loadData();
+    } else {
+        document.getElementById('panelBox').classList.add('hidden');
+        document.getElementById('loginBox').classList.remove('hidden');
+        resetError();
+    }
+});
+
+function add(){
+    let nInput = document.getElementById('n');
+    let iInput = document.getElementById('i');
+    let nameVal = nInput.value;
+    let idVal = iInput.value.replace(/\s/g, ''); 
+
+    if(nameVal && idVal){
+        db.ref('users').push({
+            name: nameVal, 
+            id: idVal,
+            date: new Date().toLocaleDateString(),
+            status: "active"
+        }).then(()=>{
+            showToast("User Added!");
+            nInput.value=""; iInput.value="";
+        });
+    } else {
+        showToast("Fill in the details!");
+    }
+}
+
+function loadData(){
+    db.ref('users').on('value',s=>{
+        let h="";
+        s.forEach(c=>{
+            let v=c.val();
+            h+=`<div class="user-card">
+                <span><b>${v.name}</b><br><small style="opacity:0.7;">${v.id}</small></span>
+                <button class="del-btn" onclick="del('${c.key}', '${v.name}')">
+                    <img src="delete.png" style="width:12px;"> Delete
+                </button>
+            </div>`;
+        });
+        document.getElementById('list').innerHTML = h || "<p style='text-align:center;opacity:0.5'>Empty List</p>";
+    });
+}
+
+function search(){
+    let v=document.getElementById('s').value.toLowerCase();
+    document.querySelectorAll('.user-card').forEach(u=>u.style.display=u.innerText.toLowerCase().includes(v)?"flex":"none");
+}
+
+function del(k, name){
+    db.ref('users').child(k).remove().then(()=>showToast(name + " removed!", true));
+}
+
+window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
+</script>
+</body>
+</html>
