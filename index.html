@@ -443,7 +443,6 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
         diag.querySelector('#cBlue').oninput = (e) => { settings[settings.theme].blue = e.target.value; applyTalhaSystem(); };
         diag.querySelector('#cRed').oninput = (e) => { settings[settings.theme].red = e.target.value; applyTalhaSystem(); };
         diag.querySelector('#cAcc').oninput = (e) => { settings[settings.theme].accent = e.target.value; applyTalhaSystem(); };
-        diag.querySelector('#sRGB').oninput = (e) => { settings[settings.theme].accent = e.target.value; applyTalhaSystem(); };
         diag.querySelector('#hSave').onclick = () => { diag.close(); diag.remove(); };
         diag.querySelector('#hReset').onclick = () => {
             localStorage.removeItem(pKey);
