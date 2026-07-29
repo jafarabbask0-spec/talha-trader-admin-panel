@@ -1,0 +1,37 @@
+// firebase.js
+import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getDatabase } from "firebase/database";
+import { getFirestore } from "firebase/firestore";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCRH5wa72kDawOqbOCzOJyH91OS0Qu1Hwc",
+  authDomain: "talha-trader-admin-panel-lock.firebaseapp.com",
+  databaseURL: "https://talha-trader-admin-panel-lock-default-rtdb.firebaseio.com",
+  projectId: "talha-trader-admin-panel-lock",
+  storageBucket: "talha-trader-admin-panel-lock.firebasestorage.app",
+  messagingSenderId: "984637629215",
+  appId: "1:984637629215:web:4b1924b5a809ea98cb862a",
+  measurementId: "G-GQL9MMH365"
+};
+
+// Initialize Firebase Core
+const app = initializeApp(firebaseConfig);
+
+// Initialize Services
+export const auth = getAuth(app);
+export const rtdb = getDatabase(app); // Realtime Database
+export const db = getFirestore(app);   // Firestore Database
+
+// Analytics Safe Initialization (SSR / Browser check)
+export let analytics;
+if (typeof window !== "undefined") {
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  });
+}
+
+export default app;
