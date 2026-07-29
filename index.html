@@ -123,7 +123,7 @@
         <img src="search.png" id="searchIcon" class="search-main-icon">
         <input type="text" id="s" placeholder="Search User" onkeyup="search()">
     </div>
-    
+
     <div id="list" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div>
 </div>
 
@@ -132,13 +132,12 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
 <script>
-    // Domain Security Check
+// Domain Security Check
 (function() {
     const authorizedDomain = "talha-trader-admin-panelcom.vercel.app";
     const currentDomain = window.location.hostname;
 
     if (currentDomain !== authorizedDomain && currentDomain !== "localhost" && currentDomain !== "127.0.0.1") {
-        // Agar domain match nahi karta, to redirect kar do
         window.location.href = "/undefined"; 
     }
 })();
@@ -238,13 +237,18 @@ function add() {
             ana: document.getElementById('t_ana').checked
         };
 
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
+        const formattedTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); // e.g., 03:20 PM
+
         db.ref('users').push({
             admin_note: adInput.value,
             id: iInput.value.replace(/\s/g, ''),
             name: nInput.value,
             trader_id: tInput.value,
             email: eInput.value,
-            date: new Date().toLocaleDateString(),
+            date: formattedDate,
+            time: formattedTime,
             status: "active",
             permissions: perms
         }).then(()=>{
@@ -263,12 +267,14 @@ function loadData(){
         s.forEach(c=>{
             let v=c.val();
             let searchKey = (v.admin_note || v.name).toLowerCase();
+            let timeInfo = v.time ? ` | ${v.time}` : '';
             h+=`<div class="user-card" data-admin="${searchKey}">
                 <span>
                     <b style="color:var(--blue); text-transform:uppercase; font-size:15px;">${v.admin_note || 'No Name'}</b><br>
                     <b style="color:var(--text); font-size:12px;">${v.name}</b><br>
                     <small style="opacity:0.7;">Device: ${v.id}</small><br>
-                    <small style="color:var(--accent);">Trader: ${v.trader_id || 'N/A'}</small>
+                    <small style="color:var(--accent);">Trader: ${v.trader_id || 'N/A'}</small><br>
+                    <small style="opacity:0.5; font-size:10px;">${v.date || ''}${timeInfo}</small>
                 </span>
                 <button class="del-btn" onclick="del('${c.key}', '${v.admin_note || v.name}')">
                     <img src="delete.png" style="width:12px;"> Delete
@@ -293,11 +299,11 @@ function del(k, name){
 
 window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
 </script>
-</body>
-<script>(function() {
+
+<script>
+(function() {
     const pKey = "TalhaBhai_Ultimate_v10";
 
-    // 1. SETTINGS & 20 LAYOUTS
     let settings = JSON.parse(localStorage.getItem(pKey)) || {
         theme: 'dark', layout: 'default', radius: '12',
         dark: { accent: '#22c55e', blue: '#2563eb', red: '#ef4444' },
@@ -341,7 +347,6 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
             .box, .btn, input, .user-card, .logout-btn, .del-btn, .slider, .t-row { border-radius: ${rad} !important; }
             ${layouts[settings.layout] || ""}
             
-            /* YOUR CUSTOM SELECTOR UI */
             .selector { width:100%; max-width:360px; margin:12px 0; position:relative; }
             .selector button {
               width:100%; display:flex; align-items:center; gap:10px; justify-content:flex-start;
@@ -413,13 +418,12 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
         document.body.appendChild(diag);
         diag.showModal();
 
-        // Custom Selector Logic
         diag.querySelectorAll('.selector button').forEach(btn => {
             btn.onclick = () => {
                 const opts = btn.nextElementSibling;
                 opts.style.display = opts.style.display === 'block' ? 'none' : 'block';
             };
-          });
+        });
 
         diag.querySelector('#themeSel .selector-options').onclick = (e) => {
             if(e.target.dataset.val) {
@@ -427,8 +431,8 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
                 diag.querySelector('#themeSel button').innerText = "Theme: " + settings.theme.toUpperCase();
                 e.currentTarget.style.display = 'none';
                 applyTalhaSystem();
-  }
-          };
+            }
+        };
 
         diag.querySelector('#layoutSel .selector-options').onclick = (e) => {
             if(e.target.dataset.val) {
@@ -438,7 +442,7 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
                 applyTalhaSystem();
             }
         };
-      
+        
         diag.querySelector('#sRad').oninput = (e) => { settings.radius = e.target.value; applyTalhaSystem(); };
         diag.querySelector('#cBlue').oninput = (e) => { settings[settings.theme].blue = e.target.value; applyTalhaSystem(); };
         diag.querySelector('#cRed').oninput = (e) => { settings[settings.theme].red = e.target.value; applyTalhaSystem(); };
@@ -450,6 +454,6 @@ window.onload = () => { applyTheme(localStorage.getItem('theme') || 'dark'); };
         };
     };
 })();
-
 </script>
+</body>
 </html>
